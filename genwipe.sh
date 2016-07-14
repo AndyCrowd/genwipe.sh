@@ -27,7 +27,7 @@ if [[ ! -z "$ShowExampleNumber" ]];then
 else
 CountEx=0;
 for GetEx in "${Example[@]}";do
-echo -e ${GetEx/nCountEx/n$CountEx};
+echo -e ${GetEx/nCountEx/_$CountEx\_};
 ((CountEx++))
 done;
 
@@ -62,7 +62,7 @@ Get_Dev_mounts=$(lsblk -o "MOUNTPOINT" ${1/[0-9]*/}  | awk '//{if(NR>1)DM=DM spr
 if [[ -z "$Get_Dev_mounts" ]];then 
 Show_mounts='E';
 else
-Show_mounts='\e[31mM\e[0m';
+Show_mounts='M\e[31m!\e[0m';
 fi
 		if [[ "$1" =~ [a-Z][0-9]+$ ]];then 
 			DevPath="$1";
@@ -82,7 +82,7 @@ Get_Part_mounts=$(findmnt "$1" -o TARGET  | awk '//{if(NR>1)DM=DM sprintf($1)}EN
 if [[  -z "$Get_Part_mounts" ]];then
 Show_part_mounts='E';
 else
-Show_part_mounts='\e[31mM\e[0m';
+Show_part_mounts='M\e[31m!\e[0m';
 fi
 			ShowExample "$1";	
 		fi
