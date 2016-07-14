@@ -1,21 +1,37 @@
 #!/bin/bash
 ShowExample()
 	{
-	Example+=("$Show_part_mounts#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
-	Example+=("$Show_part_mounts#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/random  oflag=\"noerror,nocache,direct\"");
-	Example+=("$Show_part_mounts#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/random  oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
 
-	Example+=("$Show_mounts#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
-	Example+=("$Show_mounts#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/random  oflag=\"noerror,nocache,direct\"");
-	Example+=("$Show_mounts#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/random  oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
 
-	Example+=("${Show_mounts}${Show_part_mounts}#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/urandom > /dev/$BaseName");
-	Example+=("${Show_mounts}${Show_part_mounts}#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/random  > /dev/$BaseName");
-	Example+=("${Show_mounts}${Show_part_mounts}#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/zero    > /dev/$BaseName");
+Example+=("${Show_part_mounts}nCountEx#openssl enc -aes-256-ctr -pass pass:"'"$'"(dd if=/dev/urandom bs=128 count=1 2>/dev/null | base64)"'"'" -nosalt </dev/zero | pv -bartpes  $((Dest_Size * Sector_Size))| dd bs=64K of=/dev/$BaseName");
 
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/urandom > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/random  > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/zero    > /dev/$BaseName");
+
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#badblocks -c $Sector_Size -wsv /dev/$BaseName");
+
+if [[ ! -z "$ShowExampleNumber" ]];then
+	if [[  "$ShowExampleNumber" -lt  "${#Example[@]}" ]];then
+
+		echo -e ${Example[ShowExampleNumber]}
+	else
+		echo 'The example number does not exist!';
+	fi
+else
+CountEx=0;
 for GetEx in "${Example[@]}";do
-echo -e $GetEx;
+echo -e ${GetEx/nCountEx/n$CountEx};
+((CountEx++))
 done;
+
+fi
 	}
 ShowHelp()
 	{
@@ -35,13 +51,18 @@ To update information about partitions use:
 	}
 if [[ ! -z "$@" ]];then
 	if [[ -e "$1" && -b "$1"  ]];then
+
+		if [[ "$2" =~ [0-9]+$ ]];then 
+	ShowExampleNumber="$2";
+		fi
+
 Get_Dev_mounts=$(lsblk -o "MOUNTPOINT" ${1/[0-9]*/}  | awk '//{if(NR>1)DM=DM sprintf($1)}END{print DM}');
 if [[ -z "$Get_Dev_mounts" ]];then 
 Show_mounts='E';
 else
 Show_mounts='\e[31mM\e[0m';
 fi
-		if [[ "$@" =~ [a-Z][0-9]+$ ]];then 
+		if [[ "$1" =~ [a-Z][0-9]+$ ]];then 
 			DevPath="$1";
 			rmPath="${DevPath/[^*]*\///}";
 			PartBaseName="${rmPath/\//}";
