@@ -42,6 +42,8 @@ M=mount, has mounted partitions
  Usage:
 To show calculated examples for "dd" and "pv"
  genwipe.sh /dev/sdXY
+To show only specific example use it'"'"'s number:
+ genwipe.sh /dev/sdXY 2
 To execute examples
  genwipe.sh /dev/sdXY | cut -d# -f2 | xargs sh -c
 If you dont have "pv" installed then you can skip it:
