@@ -9,8 +9,8 @@ ShowExample()
 
 Example+=("${Show_part_mounts}nCountEx#openssl enc -aes-256-ctr -pass pass:"'"$'"(dd if=/dev/urandom bs=128 count=1 2>/dev/null | base64)"'"'" -nosalt </dev/zero | pv -bartpes  $((Dest_Size * Sector_Size))| dd bs=64K of=/dev/$BaseName");
 
-	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/urandom > /dev/$BaseName");
-	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/zero    > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate /dev/urandom > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate /dev/zero    > /dev/$BaseName");
 
 	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#badblocks -c $Sector_Size -wsv /dev/$BaseName");
 
