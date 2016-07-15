@@ -32,19 +32,19 @@ fi
 	}
 ShowHelp()
 	{
-echo 'This script helps to calculate parameters to wipe a device/partition with dd.
+echo 'This script helps to calculate parameters to wipe a device/partition with various tools.
 The script is reading data from sysfs located at "/sys/block/".
-E=empty, no mount points found
+E=empty, no mount points found for the destination
 M=mount, has mounted partitions
  Usage:
-To show calculated examples for "dd" and "pv"
+To show the examples with the calculated parameters
  genwipe.sh /dev/sdXY
-To show only specific example use it'"'"'s number:
+To show only a specific example use it'"'"'s number:
  genwipe.sh /dev/sdXY 2
-To show only command
+To show only the command
  genwipe.sh /dev/sdXY | cut -d# -f2
-If you dont have "pv" installed then you can skip it:
- genwipe.sh /dev/sdXY | cut -d# -f2 |grep -v pv
+If you dont have e.g. "pv" installed then you can skip it:
+ genwipe.sh /dev/sdXY | grep -v pv
 To update information about partitions use:
  partprobe';
 	}
