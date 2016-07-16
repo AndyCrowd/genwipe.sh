@@ -46,7 +46,16 @@ To show only the command
 If you dont have e.g. "pv" installed then you can skip it:
  genwipe.sh /dev/sdXY | grep -v pv
 To update information about partitions use:
- partprobe';
+ partprobe
+To disable GVFS automount:
+ find /usr/share/gvfs/ -type f -name "*.mount" -exec sed -i "s/AutoMount=true/AutoMount=false/g" "{}" \;
+https://wiki.gnome.org/Projects/gvfs
+Many file managers has own settings or using external configuration tools
+See also:
+ gconf-editor	; disable automount for specific app
+ dconf-editor	; disable automount for specific app
+ autofs		; a kernel-based automounter for Linux
+ udev		; rules to disable automount';
 	}
 if [[ ! -z "$@" ]];then
 	if [[ -e "$1" && -b "$1"  ]];then
