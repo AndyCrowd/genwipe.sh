@@ -1,30 +1,107 @@
 #!/bin/bash
 ShowExample()
 	{
-	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
-	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"nocache\"");
+	Example+=("${Show_part_mounts}nCountEx#dd seek=0 of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"direct\"");
 
-	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"noerror,nocache,direct\"");
-	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"noerror,nocache,direct\"");
+	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/urandom oflag=\"nocache\"");
+	Example+=("${Show_mounts}nCountEx#dd seek=$Start_point of=/dev/$StorageName bs=$Sector_Size count=$Dest_Size if=/dev/zero    oflag=\"direct\"");
 
-Example+=("${Show_part_mounts}nCountEx#openssl enc -aes-256-ctr -pass pass:"'"$'"(dd if=/dev/urandom bs=128 count=1 2>/dev/null | base64)"'"'" -nosalt </dev/zero | pv -bartpes  $((Dest_Size * Sector_Size))| dd bs=64K of=/dev/$BaseName");
+Example+=("${Show_part_mounts}nCountEx#openssl enc -aes-256-ctr -pass pass:"'"$'"(dd if=/dev/urandom bs=128 count=1 2>/dev/null|base64)"'"'" -nosalt </dev/zero|pv --stop-at-size -bartpes $((Dest_Size * Sector_Size))|dd bs=64K of=/dev/$BaseName");
+Example+=("${Show_part_mounts}nCountEx#head -c 32 /dev/urandom | openssl enc -rc4 -nosalt -in /dev/zero -pass stdin | dd of=/dev/$BaseName bs=$Sector_Size count=$Dest_Size")
 
-	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate /dev/urandom > /dev/$BaseName");
-	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate /dev/zero    > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/urandom > /dev/$BaseName");
+	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#pv --stop-at-size -s $((Dest_Size * Sector_Size)) --progress --eta --timer --rate --average-rate < /dev/zero    > /dev/$BaseName");
 
 	Example+=("${Show_mounts}${Show_part_mounts}nCountEx#badblocks -c $Sector_Size -wsv /dev/$BaseName");
 
-if [[ ! -z "$ShowExampleNumber" ]];then
-	if [[  "$ShowExampleNumber" -lt  "${#Example[@]}" ]];then
+if [[ ! -z  "$TestIt"  ]];then
+IFS='#';
+			for GetArr in "${Example[@]}";do
+#echo "$GetArr";
+if [[  "$GetArr" =~ "dd" || "$GetArr" =~ "pv" || "$GetArr" =~ "openssl" ]];then
+TmpEx="${GetArr/*'Ex'}";
+RmBN="${TmpEx/$BaseName/null}";
+RmN="${RmBN/$BaseName/null}";
+  echo "${RmN/'seek=0'/}";
+#
+fi
+		done;
+fi
+
+if [[ ! -z  "$CreateIt"  ]];then
+IFS='#';
+			for GetArr in "${Example[@]}";do
+#echo "$GetArr";
+if [[  "$GetArr" =~ "dd" || "$GetArr" =~ "pv" || "$GetArr" =~ "openssl" ]];then
+TmpEx="${GetArr/*'Ex'}";
+RmBN="${TmpEx/$BaseName/null}";
+RmN="${RmBN/$BaseName/null}";
+echo ${Example[5]};
+echo ${Example[8]};
+echo "${RmN/'seek=0'/}";
+#
+fi
+		done;
+fi
+
+
+
+if [[ ! -z "$ShowExampleNumber"  || ! -z "$UseExamples" ]];then
+	if [[   "$ShowExampleNumber" =~ [0-9]+$ && "$ShowExampleNumber" -lt  "${#Example[@]}" ]];then
 
 		echo -e ${Example[ShowExampleNumber]}
-	else
+#	else
+#		echo 'The example number does not exist!';
+	fi;
+
+	case "$UseExamples" in
+		c)
+#			IFS='#';
+#			for GetArr in ${Example[@]};do
+#echo "$GetArr";
+#if [[  "$GetArr" =~ "Ex"  ]];then
+#Get_Ex="${GetArr/*'Ex'}";
+if [[ $(echo ${Example[4]} | grep ^E -c) != 0 ]];then
+	echo '#!/bin/bash' > /tmp/wipe.sh;
+	echo "${Example[4]/*'Ex#'}" >> /tmp/wipe.sh;
+	echo "${Example[7]/*'Ex#'}" >> /tmp/wipe.sh;
+	chmod +x /tmp/wipe.sh
+	echo '/tmp/wipe.sh';
+	cat /tmp/wipe.sh;
+fi
+#fi
+#		       	done;
+			;; 
+		t)
+#			echo Test Run 100M;
+			IFS='#';
+			for GetArr in "${Example[@]}";do
+#echo "$GetArr";
+#if [[  "$GetArr" =~ "Ex"  ]];then
+TmpEx="${GetArr/*'Ex'}";
+RmBN="${TmpEx/$BaseName/null}";
+RmN="${RmBN/$BaseName/null}";
+# echo $RmN;
+if [[  "$GetArr" =~ "dd" || "$GetArr" =~ "pv" || "$GetArr" =~ "openssl" ]];then
+TmpEx="${GetArr/*'Ex'}";
+RmBN="${TmpEx/$BaseName/null}";
+RmN="${RmBN/$BaseName/null}";
+  echo "${RmN/'seek=0'/}";
+#
+fi
+
+#
+		done;
+		;;
+		*)
 		echo 'The example number does not exist!';
-	fi
+			;;
+	esac
 else
 CountEx=0;
 for GetEx in "${Example[@]}";do
-echo -e ${GetEx/nCountEx/_$CountEx\_};
+[[ -z "$TestIt" ]] && echo -e ${GetEx/nCountEx/_$CountEx\_};
 ((CountEx++))
 done;
 
@@ -32,36 +109,53 @@ fi
 	}
 ShowHelp()
 	{
-echo 'This script helps to calculate parameters to wipe a device/partition with various tools.
+echo 'This script helps to calculate parameters to wipe a device/partition with dd.
 The script is reading data from sysfs located at "/sys/block/".
-E=empty, no mount points found for the destination
+E=empty, no mount points found
 M=mount, has mounted partitions
  Usage:
-To show the examples with the calculated parameters
+To show calculated examples for "dd" and "pv"
  genwipe.sh /dev/sdXY
-To show only a specific example use it'"'"'s number:
+To show only specific example use it'"'"'s number:
  genwipe.sh /dev/sdXY 2
-To show only the command
+To show only command
  genwipe.sh /dev/sdXY | cut -d# -f2
-If you dont have e.g. "pv" installed then you can skip it:
- genwipe.sh /dev/sdXY | grep -v pv
+If you dont have "pv" installed then you can skip it:
+ genwipe.sh /dev/sdXY | cut -d# -f2 |grep -v pv
 To update information about partitions use:
- partprobe
-To disable GVFS automount:
- find /usr/share/gvfs/ -type f -name "*.mount" -exec sed -i "s/AutoMount=true/AutoMount=false/g" "{}" \;
-https://wiki.gnome.org/Projects/gvfs
-Many file managers has own settings or using external configuration tools
-See also:
- gconf-editor	; disable automount for specific app
- dconf-editor	; disable automount for specific app
- autofs		; a kernel-based automounter for Linux
- udev		; rules to disable automount';
+ partprobe';
 	}
 if [[ ! -z "$@" ]];then
+case "$1" in
+	t)
+		BaseName='null';
+		StorageName='null';
+		Sector_Size='512';
+		Start_point='0';
+		Dest_Size='1024';
+		TestIt='YES';
+		ShowExample;
+		;;
+#	c)
+#		BaseName='null';
+#		StorageName='null';
+#		Sector_Size='512';
+#		Start_point='0';
+#		Dest_Size='1024';
+#		TestIt='YES';
+#		ShowExample;
+#		;;
+
+
+esac;
+
 	if [[ -e "$1" && -b "$1"  ]];then
 
 		if [[ "$2" =~ [0-9]+$ ]];then 
 	ShowExampleNumber="$2";
+		fi
+		if [[ "$2" =~ [a-Z]+$ ]];then 
+	UseExamples="$2";
 		fi
 
 Get_Dev_mounts=$(lsblk -o "MOUNTPOINT" ${1/[0-9]*/}  | awk '//{if(NR>1)DM=DM sprintf($1)}END{print DM}');
