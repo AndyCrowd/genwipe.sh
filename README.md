@@ -1,7 +1,7 @@
 # genwipe.sh
 
 Use valid path to the storage device!
-The script reading data from /sys/block/
+The script reading data from `/sys/block/`
 
 ##  Usage:
 To show calculated examples for "dd" and "pv"
